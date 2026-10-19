@@ -2,61 +2,68 @@
 const SUPABASE_URL = 'https://yefgcfewdmcrwgglausz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable__FjySgCRaX-NHkIt5Az7kw_q4OaQYWa';
 
-// Inisialisasi Supabase Client
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Inisialisasi Supabase Client yang aman
+let supabase;
+try {
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+} catch (e) {
+  console.error("Gagal load supabase:", e);
+}
 
-// Global User State
 let currentUser = null;
 let recognition = null;
 let isRecording = false;
 
-// 1. FUNGSI REGISTRASI AKUN BARU
+// TES TOMBOL DAFTAR DARURAT
 async function handleRegister() {
   const usernameInput = document.getElementById('username').value.trim();
   const passwordInput = document.getElementById('password').value.trim();
 
   if (!usernameInput || !passwordInput) {
-    alert('Mohon isi Username dan Password terlebih dahulu!');
+    alert('⚠️ Mohon isi Username dan Password dulu!');
     return;
   }
 
-  // Cek apakah username sudah dipakai
-  const { data: existingUser } = await supabase
-    .from('users')
-    .select('*')
-    .eq('username', usernameInput)
-    .single();
+  alert('Tombol daftar diklik! Menghubungkan ke database...');
 
-  if (existingUser) {
-    alert('Username ini sudah terdaftar! Gunakan username lain.');
+  if (!supabase) {
+    alert('❌ Supabase belum siap!');
     return;
   }
 
-  // Simpan akun baru ke tabel users
-  const { data, error } = await supabase
-    .from('users')
-    .insert([
-      { 
-        username: usernameInput, 
-        password: passwordInput,
-        name: usernameInput
-      }
-    ]);
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .insert([
+        { 
+          username: usernameInput, 
+          password: passwordInput,
+          name: usernameInput,
+          role: 'kasir'
+        }
+      ]);
 
-  if (error) {
-    alert('Gagal pendaftaran: ' + error.message);
-  } else {
-    alert('Akun berhasil dibuat! Silakan klik tombol "Masuk (Login)".');
+    if (error) {
+      alert('Gagal ke database: ' + error.message);
+    } else {
+      alert('✅ Akun berhasil didaftarkan! Silakan klik Masuk.');
+    }
+  } catch (err) {
+    alert('Terjadi kesalahan sistem: ' + err.message);
   }
 }
 
-// 2. FUNGSI LOGIN AKUN
 async function handleLogin() {
   const usernameInput = document.getElementById('username').value.trim();
   const passwordInput = document.getElementById('password').value.trim();
 
   if (!usernameInput || !passwordInput) {
-    alert('Mohon isi Username dan Password!');
+    alert('⚠️ Mohon isi Username dan Password!');
+    return;
+  }
+
+  if (!supabase) {
+    alert('❌ Supabase belum siap!');
     return;
   }
 
@@ -68,7 +75,7 @@ async function handleLogin() {
     .single();
 
   if (error || !user) {
-    alert('Username atau Password salah!');
+    alert('❌ Username atau Password salah, atau belum terdaftar!');
     return;
   }
 
@@ -77,7 +84,6 @@ async function handleLogin() {
   setupAppView();
 }
 
-// 3. FUNGSI KELUAR / LOGOUT
 function handleLogout() {
   currentUser = null;
   localStorage.removeItem('catatan_user');
@@ -85,7 +91,6 @@ function handleLogout() {
   document.getElementById('app-view').classList.remove('active-view');
 }
 
-// 4. NAVIGASI VIEW
 function switchView(viewId) {
   const views = ['profile-view', 'kasir-view', 'koki-view'];
   views.forEach(id => {
@@ -95,26 +100,23 @@ function switchView(viewId) {
 }
 
 function backToMainDashboard() {
-  if (currentUser.role === 'koki') {
+  if (currentUser?.role === 'koki') {
     switchView('koki-view');
   } else {
     switchView('kasir-view');
   }
 }
 
-// 5. SETUP DASHBOARD UTAMA
 function setupAppView() {
   document.getElementById('auth-view').classList.remove('active-view');
   document.getElementById('app-view').classList.add('active-view');
 
-  // Update profil header
   document.getElementById('user-display-name').innerText = currentUser.name || currentUser.username;
   document.getElementById('user-role-badge').innerText = 'Role: ' + (currentUser.role ? currentUser.role.toUpperCase() : 'KASIR');
   if (currentUser.avatar) {
     document.getElementById('user-avatar').src = currentUser.avatar;
   }
 
-  // Tampilkan dashboard sesuai role
   if (currentUser.role === 'koki') {
     switchView('koki-view');
     loadOrdersForKoki();
@@ -122,11 +124,8 @@ function setupAppView() {
     switchView('kasir-view');
     loadOrdersForKasir();
   }
-
-  listenRealtimeOrders();
 }
 
-// 6. SIMPAN PROFIL
 async function saveProfile() {
   const name = document.getElementById('profile-name').value.trim();
   const role = document.getElementById('profile-role').value;
@@ -138,7 +137,7 @@ async function saveProfile() {
     .eq('id', currentUser.id);
 
   if (error) {
-    alert('Gagal menyimpan profil: ' + error.message);
+    alert('Gagal simpan profil: ' + error.message);
   } else {
     currentUser.name = name;
     currentUser.role = role;
@@ -149,10 +148,9 @@ async function saveProfile() {
   }
 }
 
-// 7. INPUT PESANAN SUARA (MIC)
 function toggleMic() {
   if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-    alert('Fitur perekam suara tidak didukung di browser ini.');
+    alert('Fitur suara tidak didukung di browser ini.');
     return;
   }
 
@@ -167,7 +165,7 @@ function toggleMic() {
 
   recognition.onstart = () => {
     isRecording = true;
-    document.getElementById('mic-status').innerText = 'Merekam... Silakan bicara pesanan';
+    document.getElementById('mic-status').innerText = 'Merekam... Silakan bicara';
   };
 
   recognition.onresult = (event) => {
@@ -183,11 +181,10 @@ function toggleMic() {
   recognition.start();
 }
 
-// 8. KIRIM PESANAN KE KOKI
 async function sendOrderToKoki() {
   const orderDetails = document.getElementById('order-input').value.trim();
   if (!orderDetails) {
-    alert('Isi detail pesanan terlebih dahulu!');
+    alert('Isi detail pesanan dulu!');
     return;
   }
 
@@ -202,15 +199,14 @@ async function sendOrderToKoki() {
     ]);
 
   if (error) {
-    alert('Gagal mengirim pesanan: ' + error.message);
+    alert('Gagal kirim pesanan: ' + error.message);
   } else {
     document.getElementById('order-input').value = '';
-    alert('Pesanan berhasil dikirim ke Koki!');
+    alert('Pesanan terkirim!');
     loadOrdersForKasir();
   }
 }
 
-// 9. BACA PESANAN UNTUK KASIR
 async function loadOrdersForKasir() {
   const { data: orders } = await supabase
     .from('orders')
@@ -232,7 +228,6 @@ async function loadOrdersForKasir() {
   });
 }
 
-// 10. BACA PESANAN UNTUK KOKI
 async function loadOrdersForKoki() {
   const { data: orders } = await supabase
     .from('orders')
@@ -247,7 +242,7 @@ async function loadOrdersForKoki() {
     const card = document.createElement('div');
     card.className = `order-card ${item.status}`;
     card.innerHTML = `
-      <p><strong>Dari Kasir:</strong> ${item.kasir_name}</p>
+      <p><strong>Dari:</strong> ${item.kasir_name}</p>
       <p><strong>Pesanan:</strong> ${item.details}</p>
       <p><strong>Status:</strong> <span class="badge ${item.status}">${item.status.toUpperCase()}</span></p>
       ${item.status === 'pending' ? `
@@ -261,7 +256,6 @@ async function loadOrdersForKoki() {
   });
 }
 
-// 11. UPDATE STATUS PESANAN OLEH KOKI
 async function updateOrderStatus(orderId, status) {
   await supabase
     .from('orders')
@@ -271,21 +265,6 @@ async function updateOrderStatus(orderId, status) {
   loadOrdersForKoki();
 }
 
-// 12. UPDATE REALTIME DARI DATABASE
-function listenRealtimeOrders() {
-  supabase
-    .channel('orders-realtime')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
-      if (currentUser?.role === 'koki') {
-        loadOrdersForKoki();
-      } else {
-        loadOrdersForKasir();
-      }
-    })
-    .subscribe();
-}
-
-// AUTO CHECK REFRESH LOGIN
 window.addEventListener('DOMContentLoaded', () => {
   const savedUser = localStorage.getItem('catatan_user');
   if (savedUser) {
