@@ -89,13 +89,13 @@
     }
   </style>
 
-  <!-- SDK Supabase lewat CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-javascript@2"></script>
+  <!-- SDK Supabase CDN yang Benar -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
   <!-- ========================================== -->
-  <!-- 1. HALAMAN LOGIN / REGISTER (CUMA USN & PW) -->
+  <!-- 1. HALAMAN LOGIN / REGISTER -->
   <!-- ========================================== -->
   <div id="auth-view" class="view-section active-view">
     <div class="card" style="max-width: 400px; margin: 40px auto;">
@@ -111,7 +111,7 @@
       <button onclick="handleLogin()">Masuk (Login)</button>
       <button onclick="handleRegister()" class="btn-secondary">Daftar Akun Baru</button>
 
-      <!-- Link Kecil Contact Perancang APK -->
+      <!-- Link Contact Perancang APK -->
       <div class="footer-contact">
         <a href="https://wa.me/6283199265399" target="_blank">contact perancang apk</a>
       </div>
@@ -119,7 +119,7 @@
   </div>
 
   <!-- ========================================== -->
-  <!-- APP CONTAINER (SETELAH USER BERHASIL LOGIN) -->
+  <!-- APP CONTAINER (DASHBOARD UTAMA) -->
   <!-- ========================================== -->
   <div id="app-view" class="view-section">
     
@@ -138,9 +138,7 @@
       </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- 2. HALAMAN EDIT PROFIL & PENGATURAN AKUN -->
-    <!-- ========================================== -->
+    <!-- 2. HALAMAN EDIT PROFIL -->
     <div id="profile-view" class="view-section">
       <div class="card">
         <h3>Pengaturan Profil Akun</h3>
@@ -161,65 +159,39 @@
       </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- 3. HALAMAN KASIR (MIC / KETIK MANUAL) -->
-    <!-- ========================================== -->
+    <!-- 3. HALAMAN KASIR -->
     <div id="kasir-view" class="view-section">
       <div class="card">
         <h3>Input Pesanan Baru (Kasir)</h3>
         
-        <!-- Opsi 1: Pake Mic Suara -->
         <button id="mic-btn" onclick="toggleMic()" class="mic-btn">
-          🎤 Tekan & Merekam Suara Pesanan
+          🎤 Merekam Suara Pesanan
         </button>
         <p id="mic-status" style="font-size: 12px; color: var(--primary-brown); margin-top: -6px; text-align: center;"></p>
 
-        <!-- Opsi 2: Ketik Manual / Hasil Konversi Suara -->
-        <label for="order-input">Teks Pesanan (Otomatis Diracik AI):</label>
-        <textarea id="order-input" rows="4" placeholder="Contoh: Nasi rendang 1 kuah banjir, es teh 1 kurangin manis..."></textarea>
+        <label for="order-input">Teks Pesanan:</label>
+        <textarea id="order-input" rows="4" placeholder="Contoh: Nasi rendang 1 kuah banjir, es teh 1..."></textarea>
         
         <button onclick="sendOrderToKoki()">Kirim Pesanan ke Koki 🚀</button>
       </div>
 
-      <!-- STATUS PESANAN REALTIME UNTUK KASIR -->
       <div class="card">
         <h3>Status Pesanan Dikirim</h3>
-        <div id="kasir-order-list">
-          <!-- Item pesanan realtime dari database akan muncul di sini -->
-        </div>
+        <div id="kasir-order-list"></div>
       </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- 4. HALAMAN KOKI / DAPUR (ACCEPT / REJECT) -->
-    <!-- ========================================== -->
+    <!-- 4. HALAMAN KOKI -->
     <div id="koki-view" class="view-section">
       <div class="card">
         <h3>Daftar Pesanan Masuk (Dapur)</h3>
-        <div id="koki-order-list">
-          <!-- Pesanan masuk realtime dari kasir akan muncul di sini -->
-        </div>
-      </div>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- 5. HALAMAN RIWAYAT / HISTORY PESANAN -->
-    <!-- ========================================== -->
-    <div id="history-view" class="view-section">
-      <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-          <h3 style="margin: 0;">Riwayat Pesanan</h3>
-          <button onclick="clearHistory()" class="btn-danger" style="width: auto; padding: 6px 10px; font-size: 12px; margin: 0;">Hapus History 🗑️</button>
-        </div>
-        <div id="history-order-list">
-          <!-- History pesanan yang pernah diproses -->
-        </div>
+        <div id="koki-order-list"></div>
       </div>
     </div>
 
   </div>
 
-  <!-- File Logika JavaScript terpisah -->
+  <!-- File Logika JavaScript -->
   <script src="script.js"></script>
 </body>
 </html>
